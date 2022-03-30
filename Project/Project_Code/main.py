@@ -36,17 +36,18 @@ def main(file_number):
     #         Trace Mode                   #
     ########################################
     if processing_mode == "trace":
-        output_SJ_departure = trace_mode.trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, service_file, idle_server_Value)
-        # print(Decimal("3.8") + Decimal("9.1"))
-
-        # print(sup_Function.decimal_calculation("-", 3.8, 9.1))
+        output_SJ_departure, mrt_SJ = trace_mode.trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, service_file, idle_server_Value)
 
         # Output file path
         dep_file = os.path.join(outputFolder, 'dep_' + file_number+'.txt')
+        mrt_file = os.path.join(outputFolder, 'mrt_' + file_number + '.txt')
 
         # Write Txt to file
         with open(dep_file, "w") as file:
             file.write(output_SJ_departure)
+
+        with open(mrt_file, "w") as file:
+            file.write(str(mrt_SJ))
 
     ########################################
     #         Random Mode                  #

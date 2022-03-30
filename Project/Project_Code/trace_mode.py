@@ -2,6 +2,7 @@ import sup_Function
 from tabulate import tabulate
 import numpy as np
 from math import inf
+import re
 
 
 def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, service_file, idle_server_Value):
@@ -30,14 +31,18 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
     next_departure_time = inf
     high_pri_queue = []
     low_pri_queue = []
+    sub_job_completed = 0
 
     # 3) Append Value to Table Array
-    table_array.append(sup_Function.Trace_Temp_table_array(master_clock, next_event_type, next_arrival_time, server_status_list, [], []))
+    table_array.append(
+        sup_Function.Trace_Temp_table_array(master_clock, next_event_type, next_arrival_time, server_status_list, [],
+                                            []))
 
     ########################################
     #          Simulation Output           #
     ########################################
-    output_dep = ""
+    temp_output_sub_job_departure = []
+    output_cumulative_Response_time = 0
 
     ########################################
     #          Simulation Start            #
@@ -67,11 +72,12 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
                 ########################################
                 if server_available_NO == 0:
                     # Check If its priority List
-                    queue_status_value = "(" + str(task_arrival_counter + 1) + "," + str(sj_index + 1) + "), " + str(next_arrival_time) + ", " + str(sub_job_service_time_list[task_arrival_counter][sj_index])
+                    queue_status_value = "(" + str(task_arrival_counter + 1) + "," + str(sj_index + 1) + "), " + str(
+                        next_arrival_time) + ", " + str(sub_job_service_time_list[task_arrival_counter][sj_index])
                     if sj_number <= threshold:
                         high_pri_queue.append(queue_status_value)
                     else:
-                       low_pri_queue.append(queue_status_value)
+                        low_pri_queue.append(queue_status_value)
 
                 ########################################
                 #        Allocate Task to Server       #
@@ -81,7 +87,8 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
                     locate_avail_server = server_status_list.index(idle_server_Value)
 
                     Temp_Departure_val = round(next_arrival_time + sj_service_list[sj_index], 4)
-                    server_status_value = "Busy, " + str(Temp_Departure_val) + ", " + str(master_clock) + ", (" + str(task_arrival_counter + 1) + "," + str(sj_index + 1) + ")"
+                    server_status_value = "Busy, " + str(Temp_Departure_val) + ", " + str(master_clock) + ", (" + str(
+                        task_arrival_counter + 1) + "," + str(sj_index + 1) + ")"
 
                     server_status_list[locate_avail_server] = server_status_value
 
@@ -120,7 +127,10 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
                     server_available_NO = server_available_NO + 1
                     next_event_type = next_event_type + " - Server " + str(i + 1)
 
-                    output_dep = output_dep + sj_depature_info[2] + " " * 3 + sj_depature_info[1] + "\n"
+                    # Write Output Value
+                    sub_job_completed = sub_job_completed + 1
+                    temp_subjob_value = [sj_depature_info[2], sj_depature_info[1]]
+                    temp_output_sub_job_departure.append(temp_subjob_value)
 
                 # After Departure, Check if Queue are empty, and process it.
                 if high_pri_queue and server_available_NO != 0:
@@ -128,7 +138,8 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
                     data = high_pri_queue[0].split(", ")
 
                     # Convert the Data to Server Status form
-                    server_status_value = "Busy, " + str(round(master_clock + float(data[2]), 4)) + ", " + data[1] + ", " + data[0]
+                    server_status_value = "Busy, " + str(round(master_clock + float(data[2]), 4)) + ", " + data[
+                        1] + ", " + data[0]
 
                     # look for the fist available Server
                     locate_avail_server = server_status_list.index(idle_server_Value)
@@ -145,7 +156,8 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
                     data = low_pri_queue[0].split(", ")
 
                     # Convert the Data to Server Status form
-                    server_status_value = "Busy, " + str(round(master_clock + float(data[2]), 4)) + ", " + data[1] + ", " + data[0]
+                    server_status_value = "Busy, " + str(round(master_clock + float(data[2]), 4)) + ", " + data[
+                        1] + ", " + data[0]
 
                     # look for the fist available Server
                     locate_avail_server = server_status_list.index(idle_server_Value)
@@ -160,7 +172,8 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
             next_departure_time = sup_Function.earliest_departure_Server(server_status_list)
 
         # Update The Table value
-        insert_value = sup_Function.Trace_Temp_table_array(master_clock, next_event_type, next_arrival_time, server_status_list, high_pri_queue, low_pri_queue)
+        insert_value = sup_Function.Trace_Temp_table_array(master_clock, next_event_type, next_arrival_time,
+                                                           server_status_list, high_pri_queue, low_pri_queue)
         table_array.append(insert_value)
 
         # End the Simulation
@@ -169,4 +182,31 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
 
     print(tabulate(table_array, headers=col_names, tablefmt="fancy_grid"))
 
-    return output_dep
+    ########################################
+    #     Convert Stored Data to Output    #
+    ########################################
+    temp_output_resp = 0
+    temp_counter = 0
+    output_sub_job_departure = ""
+    # Output Departure String
+    for arr in temp_output_sub_job_departure:
+        output_sub_job_departure = output_sub_job_departure + str(arr[0]) + " " * 3 + str(arr[1]) + "\n"
+        temp_counter = temp_counter + 1
+
+    print(temp_output_sub_job_departure)
+
+    # Calcualte Response Time
+    myDic = {}
+    output_response_time = 0
+
+    for i in temp_output_sub_job_departure:
+        if i[0] not in myDic:
+            myDic[i[0]] = i
+        else:
+            if float(myDic[i[0]][1]) < float(i[1]):
+                myDic[i[0]] = i
+
+    for i in myDic:
+        output_response_time = round(output_response_time + round(float(myDic[i][1]) - float(myDic[i][0]), 4), 4)
+
+    return output_sub_job_departure, round(output_response_time / job_NO, 4)
