@@ -1,6 +1,7 @@
 # This py include all the necessary function for calculation
 
 import math
+from decimal import *
 
 # Read inter-arrival file According to mode
 import numpy as np
@@ -27,7 +28,7 @@ def read_inter_arrival_file(mode, filePath):
         arrival_time_cumulative = 0
         for i in range(0, len(inter_arrival_time_data)):
             arrival_time_cumulative += inter_arrival_time_data[i]
-            inter_arrival_time_data[i] = arrival_time_cumulative
+            inter_arrival_time_data[i] = round(arrival_time_cumulative, 4)
 
         return inter_arrival_time_data
     else:
@@ -93,9 +94,10 @@ def earliest_departure_Server(Server_Status_List):
 
     for i in Server_Status_List:
         if i != "Idle, ∞":
-            temp_depart_time = float(i.split(", ")[1])
+            TAB = i.split(", ")[1].strip()
+            temp_depart_time = float(TAB)
 
-            if depart_time > temp_depart_time:
+            if depart_time >= temp_depart_time:
                 depart_time = temp_depart_time
 
     return depart_time
@@ -127,4 +129,3 @@ def Trace_Temp_table_array(master_clock, event_type, next_arrival_time, servers_
         Temp_table_arr.append(temp_low_pri_array)
 
     return Temp_table_arr
-

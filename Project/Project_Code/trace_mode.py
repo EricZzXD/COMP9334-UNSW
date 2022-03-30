@@ -35,6 +35,11 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
     table_array.append(sup_Function.Trace_Temp_table_array(master_clock, next_event_type, next_arrival_time, server_status_list, [], []))
 
     ########################################
+    #          Simulation Output           #
+    ########################################
+    output_dep = ""
+
+    ########################################
     #          Simulation Start            #
     ########################################
     while Simulation_start:
@@ -75,9 +80,8 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
                     # Find the first available server from the List (from server 1 to server 4)
                     locate_avail_server = server_status_list.index(idle_server_Value)
 
-                    Temp_Departure_val = next_arrival_time + sj_service_list[sj_index]
-                    server_status_value = "Busy, " + str(Temp_Departure_val) + ", " + str(master_clock) + \
-                                          ", (" + str(task_arrival_counter + 1) + "," + str(sj_index + 1) + ")"
+                    Temp_Departure_val = round(next_arrival_time + sj_service_list[sj_index], 4)
+                    server_status_value = "Busy, " + str(Temp_Departure_val) + ", " + str(master_clock) + ", (" + str(task_arrival_counter + 1) + "," + str(sj_index + 1) + ")"
 
                     server_status_list[locate_avail_server] = server_status_value
 
@@ -105,12 +109,18 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
 
             # find the job departure server from the Server list
             for i in range(0, server_NO):
-                if (server_status_list[i] != idle_server_Value) & (server_status_list[i].split(", ")[1] == str(next_departure_time)):
+                # Get Departure Info
+                sj_depature_info = server_status_list[i].split(", ")
+
+                # Find Departure Server
+                if (server_status_list[i] != idle_server_Value) & (sj_depature_info[1] == str(next_departure_time)):
                     # Update from Busy state to Idle
                     server_status_list[i] = idle_server_Value
                     # Job departure, available server + 1
                     server_available_NO = server_available_NO + 1
                     next_event_type = next_event_type + " - Server " + str(i + 1)
+
+                    output_dep = output_dep + sj_depature_info[2] + " " * 3 + sj_depature_info[1] + "\n"
 
                 # After Departure, Check if Queue are empty, and process it.
                 if high_pri_queue and server_available_NO != 0:
@@ -118,7 +128,7 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
                     data = high_pri_queue[0].split(", ")
 
                     # Convert the Data to Server Status form
-                    server_status_value = "Busy, " + str(master_clock + float(data[2])) + ", " + data[1] + ", " + data[0]
+                    server_status_value = "Busy, " + str(round(master_clock + float(data[2]), 4)) + ", " + data[1] + ", " + data[0]
 
                     # look for the fist available Server
                     locate_avail_server = server_status_list.index(idle_server_Value)
@@ -135,8 +145,7 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
                     data = low_pri_queue[0].split(", ")
 
                     # Convert the Data to Server Status form
-                    server_status_value = "Busy, " + str(master_clock + float(data[2])) + ", " + data[1] + ", " + data[
-                        0]
+                    server_status_value = "Busy, " + str(round(master_clock + float(data[2]), 4)) + ", " + data[1] + ", " + data[0]
 
                     # look for the fist available Server
                     locate_avail_server = server_status_list.index(idle_server_Value)
@@ -159,3 +168,5 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
             Simulation_start = False
 
     print(tabulate(table_array, headers=col_names, tablefmt="fancy_grid"))
+
+    return output_dep

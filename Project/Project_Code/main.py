@@ -6,18 +6,19 @@ to a file.
 """
 
 import sys
-import os
 import numpy as np
-from math import inf
+import os
+
 import sup_Function
 import trace_mode
 import random_mode
-from tabulate import tabulate
+from decimal import *
 
 
 def main(file_number):
-    # Read file from Folder (name)
+    # Read/Output file from Folder (name)
     readFolder = "config"
+    outputFolder = "output"
 
     # construct Value
     idle_server_Value = "Idle, ∞"
@@ -31,9 +32,25 @@ def main(file_number):
     # Read Processing Mode from File
     processing_mode = open(Mode_file, "r").read().strip()  # Read mode and clear all newline and space
 
+    ########################################
+    #         Trace Mode                   #
+    ########################################
     if processing_mode == "trace":
-        trace_mode.trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, service_file, idle_server_Value)
+        output_SJ_departure = trace_mode.trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, service_file, idle_server_Value)
+        # print(Decimal("3.8") + Decimal("9.1"))
 
+        # print(sup_Function.decimal_calculation("-", 3.8, 9.1))
+
+        # Output file path
+        dep_file = os.path.join(outputFolder, 'dep_' + file_number+'.txt')
+
+        # Write Txt to file
+        with open(dep_file, "w") as file:
+            file.write(output_SJ_departure)
+
+    ########################################
+    #         Random Mode                  #
+    ########################################
     elif processing_mode == "random":
         random_mode.random_mode_simulation(processing_mode, Para_file, inter_arrival_file, service_file)
 
@@ -42,4 +59,4 @@ def main(file_number):
 
 
 if __name__ == "__main__":
-    main("1")
+    main("4")
