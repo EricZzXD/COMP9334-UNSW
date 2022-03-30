@@ -52,7 +52,7 @@ def read_service_file(mode, filepath):
 
         # If value is NaN, pop the value from list and return clean list (without NaN)
         for arr in range(0, numbers_jobs):
-            for i in range(0, max_number_of_sub_job):
+            for i in range(max_number_of_sub_job-1, 0, -1):
                 if np.isnan(data[arr][i]):
                     data[arr].pop(i)
 
@@ -60,30 +60,6 @@ def read_service_file(mode, filepath):
     else:
         data = np.loadtxt(filepath)
         return data[0], data[1]  # Mu & alpha
-
-
-# Every event will create a temporary table array that used to append to Actual Table array
-def Trace_Temp_table_array(master_clock, event_type, next_arrival_time, servers_status_array,
-                           high_pri_Queue, low_pri_Queue):
-    Temp_table_arr = [master_clock, event_type, next_arrival_time]
-
-    # Append value in the order of {Master Clock, Event_type, Next_arrival_time, server1_status, ...serverN_status,
-    # High_priority_queue, low_priority_queue}
-
-    for server in servers_status_array:
-        Temp_table_arr.append(server)
-
-    if not high_pri_Queue:
-        Temp_table_arr.append("-")
-    else:
-        Temp_table_arr.append(high_pri_Queue)
-
-    if not low_pri_Queue:
-        Temp_table_arr.append("-")
-    else:
-        Temp_table_arr.append(low_pri_Queue)
-
-    return Temp_table_arr
 
 
 # Define Header Names
@@ -105,4 +81,50 @@ def cdf_subJob_service_time(mu, subT, a):
         return EOFError
 
     return 1 - math.exp(-(mu * subT) ** a)
+
+
+#############################################################
+#       Trace Mode Function
+#############################################################
+
+# Find earliest departure
+def earliest_departure_Server(Server_Status_List):
+    depart_time = math.inf
+
+    for i in Server_Status_List:
+        if i != "Idle, ∞":
+            temp_depart_time = float(i.split(", ")[1])
+
+            if depart_time > temp_depart_time:
+                depart_time = temp_depart_time
+
+    return depart_time
+
+
+# Every event will create a temporary table array that used to append to Actual Table array
+def Trace_Temp_table_array(master_clock, event_type, next_arrival_time, servers_status_array,
+                           high_pri_Queue, low_pri_Queue):
+    Temp_table_arr = [master_clock, event_type, next_arrival_time]
+
+    temp_high_pri_array = []
+    temp_low_pri_array = []
+
+    for server in servers_status_array:
+        Temp_table_arr.append(server)
+
+    if not high_pri_Queue:
+        Temp_table_arr.append("-")
+    else:
+        for value in high_pri_Queue:
+            temp_high_pri_array.append(value)
+        Temp_table_arr.append(temp_high_pri_array)
+
+    if not low_pri_Queue:
+        Temp_table_arr.append("-")
+    else:
+        for value in low_pri_Queue:
+            temp_low_pri_array.append(value)
+        Temp_table_arr.append(temp_low_pri_array)
+
+    return Temp_table_arr
 
