@@ -193,12 +193,11 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
         output_sub_job_departure = output_sub_job_departure + str(arr[0]) + " " * 3 + str(arr[1]) + "\n"
         temp_counter = temp_counter + 1
 
-    print(temp_output_sub_job_departure)
-
     # Calcualte Response Time
     myDic = {}
     output_response_time = 0
 
+    # Find all the sub-job of a same job but compare the departure value to find the job response time of each job
     for i in temp_output_sub_job_departure:
         if i[0] not in myDic:
             myDic[i[0]] = i
@@ -206,6 +205,7 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
             if float(myDic[i[0]][1]) < float(i[1]):
                 myDic[i[0]] = i
 
+    # loop the Dic and get the total response time
     for i in myDic:
         output_response_time = round(output_response_time + round(float(myDic[i][1]) - float(myDic[i][0]), 4), 4)
 
