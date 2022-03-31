@@ -35,7 +35,7 @@ def read_inter_arrival_file(mode, filePath):
         f = open(filePath)
         first_line = f.readline().split()
         second_line = f.readline().split()
-        return first_line[0], first_line[1], first_line[2], second_line
+        return float(first_line[0]), float(first_line[1]), float(first_line[2]), second_line
 
 
 # Read service_*.txt and data format
@@ -76,56 +76,4 @@ def table_header_names(Number_of_servers):
     return col_names
 
 
-# Generate k random service times for the k sub-jobs (Project-v1.00 - P15)
-def cdf_subJob_service_time(mu, subT, a):
-    if mu < 0 or a < 0:
-        return EOFError
 
-    return 1 - math.exp(-(mu * subT) ** a)
-
-
-#############################################################
-#       Trace Mode Function
-#############################################################
-
-# Find earliest departure
-def earliest_departure_Server(Server_Status_List):
-    depart_time = math.inf
-
-    for i in Server_Status_List:
-        if i != "Idle, ∞":
-            TAB = i.split(", ")[1].strip()
-            temp_depart_time = float(TAB)
-
-            if depart_time >= temp_depart_time:
-                depart_time = temp_depart_time
-
-    return depart_time
-
-
-# Every event will create a temporary table array that used to append to Actual Table array
-def Trace_Temp_table_array(master_clock, event_type, next_arrival_time, servers_status_array,
-                           high_pri_Queue, low_pri_Queue):
-    Temp_table_arr = [master_clock, event_type, next_arrival_time]
-
-    temp_high_pri_array = []
-    temp_low_pri_array = []
-
-    for server in servers_status_array:
-        Temp_table_arr.append(server)
-
-    if not high_pri_Queue:
-        Temp_table_arr.append("-")
-    else:
-        for value in high_pri_Queue:
-            temp_high_pri_array.append(value)
-        Temp_table_arr.append(temp_high_pri_array)
-
-    if not low_pri_Queue:
-        Temp_table_arr.append("-")
-    else:
-        for value in low_pri_Queue:
-            temp_low_pri_array.append(value)
-        Temp_table_arr.append(temp_low_pri_array)
-
-    return Temp_table_arr

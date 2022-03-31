@@ -53,11 +53,11 @@ def main(file_number):
     #         Random Mode                  #
     ########################################
     elif processing_mode == "random":
-        random_mode.random_mode_simulation(processing_mode, Para_file, inter_arrival_file, service_file)
+        random_mode.random_mode_simulation(processing_mode, Para_file, inter_arrival_file, service_file, idle_server_Value)
 
     else:
         print("Error")
 
 
 if __name__ == "__main__":
-    main("4")
+    main("5")
