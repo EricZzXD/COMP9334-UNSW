@@ -3,7 +3,6 @@ from tabulate import tabulate
 from math import inf
 
 
-
 def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, service_file, idle_server_Value):
     ########################################
     #   Read value from the Input file     #
@@ -22,7 +21,7 @@ def trace_mode_simulation(processing_mode, Para_file, inter_arrival_file, servic
     # 2) Temp Value for Simulation use
     Simulation_start = True
     task_arrival_counter = 0
-    server_status_list = ["Idle, ∞"] * server_NO
+    server_status_list = [idle_server_Value] * server_NO
     server_available_NO = server_NO
     master_clock = 0
     next_event_type = "-"
