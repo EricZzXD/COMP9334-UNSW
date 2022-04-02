@@ -60,16 +60,15 @@ def random_mode_simulation(processing_mode, Para_file, inter_arrival_file, servi
         if next_event_type == "Arrival":
             # update Master clock value and other info
             master_clock = next_arrival_time
-            next_arrival_time = master_clock + generate_inter_arrival_time(a2l, a2u, lamb)
+            next_arrival_time = round(master_clock + generate_inter_arrival_time(a2l, a2u, lamb),4)
             inter_arrival_value_list_store.append(next_arrival_time)  # Record - List of inter arrival job
             no_job_arrival = no_job_arrival + 1  # Record - Number of income Job
 
             # Generate k sub-job
             sj_number = generate_NO_sub_job(p_sequence)
 
-            temp_subjob_service_list = []
-
             # Generate Service Time
+            temp_subjob_service_list = []
             for i in range(0, sj_number):
                 value = round(((-math.log(1 - random.uniform(0, 1))) ** (1 / alpha)) / mu, 4)
                 if (master_clock + value) < end_time:
@@ -88,8 +87,7 @@ def random_mode_simulation(processing_mode, Para_file, inter_arrival_file, servi
                     ########################################
                     if server_available_NO == 0:
                         # Check If its priority List
-                        queue_status_value = "(" + str(task_arrival_counter + 1) + "," + str(
-                            sj_index + 1) + "), " + str(next_arrival_time) + ", " + str(sj_service_list[sj_index])
+                        queue_status_value = "(" + str(task_arrival_counter) + "," + str(sj_index + 1) + "), " + str(master_clock) + ", " + str(sj_service_list[sj_index])
                         if sj_number <= threshold:
                             high_pri_queue.append(queue_status_value)
                         else:
@@ -102,17 +100,16 @@ def random_mode_simulation(processing_mode, Para_file, inter_arrival_file, servi
                         # Find the first available server from the List (from server 1 to server 4)
                         locate_avail_server = server_status_list.index(idle_server_Value)
 
-                        Temp_Departure_val = round(next_arrival_time + sj_service_list[sj_index], 4)
-                        server_status_value = "Busy, " + str(Temp_Departure_val) + ", " + str(
-                            master_clock) + ", (" + str(task_arrival_counter + 1) + "," + str(sj_index + 1) + ")"
+                        Temp_Departure_val = round(master_clock + sj_service_list[sj_index], 4)
+                        server_status_value = "Busy, " + str(Temp_Departure_val) + ", " + str(master_clock) + ", (" + str(task_arrival_counter) + "," + str(sj_index + 1) + ")"
 
                         server_status_list[locate_avail_server] = server_status_value
 
                         # Server In-use
                         server_available_NO = server_available_NO - 1
 
-            # Server Allocation Complete and Update Task_arrival_counter
-            task_arrival_counter = task_arrival_counter + 1
+                # Server Allocation Complete and Update Task_arrival_counter
+                task_arrival_counter = task_arrival_counter + 1
 
             ########################################
             #     Find Earliest Departure Time     #
@@ -128,19 +125,19 @@ def random_mode_simulation(processing_mode, Para_file, inter_arrival_file, servi
             # find the job departure server from the Server list
             for i in range(0, server_NO):
                 # Get Departure Info
-                sj_depature_info = server_status_list[i].split(", ")
+                sj_departure_info = server_status_list[i].split(", ")
 
                 # Find Departure Server
-                if (server_status_list[i] != idle_server_Value) & (sj_depature_info[1] == str(next_departure_time)):
+                if (server_status_list[i] != idle_server_Value) & (sj_departure_info[1] == str(next_departure_time)):
                     # Update from Busy state to Idle
                     server_status_list[i] = idle_server_Value
                     # Job departure, available server + 1
                     server_available_NO = server_available_NO + 1
                     next_event_type = next_event_type + " - Server " + str(i + 1)
 
-                    # Write Output Value
+                    # Write Output Value ---
                     sub_job_completed = sub_job_completed + 1
-                    temp_subjob_value = [sj_depature_info[2], sj_depature_info[1]]
+                    temp_subjob_value = [sj_departure_info[2], sj_departure_info[1]]
                     temp_output_sub_job_departure.append(temp_subjob_value)
 
                     # After Departure, Check if Queue are empty, and process it.
@@ -152,11 +149,8 @@ def random_mode_simulation(processing_mode, Para_file, inter_arrival_file, servi
                         server_status_value = "Busy, " + str(round(master_clock + float(data[2]), 4)) + ", " + data[
                             1] + ", " + data[0]
 
-                        # look for the fist available Server
-                        locate_avail_server = server_status_list.index(idle_server_Value)
-
                         # Assign Value to Server
-                        server_status_list[locate_avail_server] = server_status_value
+                        server_status_list[i] = server_status_value
 
                         # Update number of available of server & clear value from the queue
                         server_available_NO = server_available_NO - 1
@@ -187,7 +181,6 @@ def random_mode_simulation(processing_mode, Para_file, inter_arrival_file, servi
                                         high_pri_queue, low_pri_queue)
         table_array.append(insert_value)
 
-    print(tabulate(table_array, headers=col_names, tablefmt="fancy_grid"))
 
     ########################################
     #     Convert Stored Data to Output    #
@@ -216,6 +209,8 @@ def random_mode_simulation(processing_mode, Para_file, inter_arrival_file, servi
     for i in myDic:
         output_response_time = round(output_response_time + round(float(myDic[i][1]) - float(myDic[i][0]), 4), 4)
 
+    # print(tabulate(table_array, headers=col_names, tablefmt="fancy_grid"))
+
     return output_sub_job_departure, round(output_response_time / no_job_arrival, 4)
 
 
@@ -232,16 +227,14 @@ def generate_inter_arrival_time(a2l, a2u, lamb):
 
 # Get Number of Server Base on percentage
 def generate_NO_sub_job(prob_array):
-    value = random.uniform(0, 1)
-    cumulate = float(prob_array[0])
-    Subjob_counter = 1
-
+    temp_sub_job = []
+    temp_P_sequence = []
     for i in range(0, len(prob_array)):
-        if value <= cumulate:
-            return Subjob_counter
-        else:
-            cumulate = cumulate + float(prob_array[i + 1])
-            Subjob_counter = Subjob_counter + 1
+        temp_sub_job.append(int(i + 1))
+        temp_P_sequence.append(float(prob_array[i]))
+
+    value = random.choices(temp_sub_job, temp_P_sequence)
+    return value[0]
 
 
 # Find earliest departure

@@ -50,7 +50,6 @@ def main(file_number):
         output_SJ_departure, mrt_SJ = random_mode.random_mode_simulation(processing_mode, Para_file,
                                                                                        inter_arrival_file, service_file,
                                                                                        idle_server_Value)
-
     else:
         print("Error")
 
@@ -67,4 +66,4 @@ def main(file_number):
 
 
 if __name__ == "__main__":
-    main("6")
+    main("7")
