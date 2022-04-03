@@ -37,17 +37,13 @@ def main(file_number):
     ########################################
     Simulation_start = True
     inter_arrival_value_list_store = []
-    server_status_list = []
     no_job_arrival = 0
-    next_arrival_time = 0
-    server_available_NO = 0
     master_clock = 0
-    next_event_type = "-"
     next_departure_time = math.inf
     high_pri_queue = []
     low_pri_queue = []
-    sub_job_completed = 0
     arrival_true = True
+    sub_job_Service_time_List_Store = []
 
     ########################################
     #   Read value from the Input file     #
@@ -58,15 +54,15 @@ def main(file_number):
         job_NO, max_sub_job, sub_job_service_time_list = read_service_file(processing_mode, service_file)
         server_status_list = [idle_server_Value] * server_NO
         next_arrival_time = arrival_time_array[no_job_arrival]
-        server_status_list = [idle_server_Value] * server_NO
         server_available_NO = server_NO
-    else:
+    else:  # Random Mode
         server_NO, threshold, end_time = read_para_file(processing_mode, Para_file)
         lamb, a2l, a2u, p_sequence = read_inter_arrival_file(processing_mode, inter_arrival_file)
         mu, alpha = read_service_file(processing_mode, service_file)
         next_arrival_time = generate_inter_arrival_time(a2l, a2u, lamb)
         inter_arrival_value_list_store.append(next_arrival_time)
         server_status_list = [idle_server_Value] * server_NO
+        server_available_NO = server_NO
 
     ########################################
     #          Simulation Output           #
@@ -111,7 +107,7 @@ def main(file_number):
                     next_arrival_time = arrival_time_array[no_job_arrival]
 
             else:  # Random Mode
-                next_arrival_time = round(master_clock + generate_inter_arrival_time(a2l, a2u, lamb), 4)
+                next_arrival_time = master_clock + generate_inter_arrival_time(a2l, a2u, lamb)
                 inter_arrival_value_list_store.append(next_arrival_time)  # Record - List of inter arrival job
                 no_job_arrival = no_job_arrival + 1  # Record - Number of income Job
 
@@ -127,8 +123,7 @@ def main(file_number):
                     else:
                         arrival_true = False
 
-                # Server Allocation Complete and Update Task_arrival_counter
-                no_job_arrival = no_job_arrival + 1
+                sub_job_Service_time_List_Store.append(sj_service_list)  # Record - Store inter-arrival Time
 
             if arrival_true:
                 # Loop According number of Sub-Job
@@ -185,6 +180,7 @@ def main(file_number):
                     # Write Output Value ---
                     temp_subjob_value = [sj_departure_info[2], sj_departure_info[1]]
                     temp_output_sub_job_departure.append(temp_subjob_value)
+                    # print(temp_output_sub_job_departure)
 
                     # After Departure, Check if Queue are empty, and process it.
                     if high_pri_queue:
@@ -378,5 +374,5 @@ def read_service_file(mode, filepath):
 
 
 if __name__ == "__main__":
-    # main(str(sys.argv[1]))
-    main("1")
+    main(str(sys.argv[1]))
+    # main("5")
