@@ -47,6 +47,7 @@ def main(file_number):
     high_pri_queue = []
     low_pri_queue = []
     sub_job_completed = 0
+    arrival_true = True
 
     ########################################
     #   Read value from the Input file     #
@@ -377,4 +378,5 @@ def read_service_file(mode, filepath):
 
 
 if __name__ == "__main__":
-    main(str(sys.argv[1]))
+    # main(str(sys.argv[1]))
+    main("1")
