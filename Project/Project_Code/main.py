@@ -16,6 +16,7 @@ def main(file_number):
     # Read/Output file from Folder (name)
     readFolder = "config"
     outputFolder = "output"
+    logMaterialFolder = "support_material"
 
     # construct Value
     idle_server_Value = "Idle, ∞"
@@ -37,14 +38,14 @@ def main(file_number):
     ########################################
     Simulation_start = True
     inter_arrival_value_list_store = []
+    sub_job_Service_time_List_Store = []
+    job_service_time_Store = []
     no_job_arrival = 0
     master_clock = 0
     next_departure_time = math.inf
     high_pri_queue = []
     low_pri_queue = []
     arrival_true = True
-    sub_job_Service_time_List_Store = []
-
     ########################################
     #   Read value from the Input file     #
     ########################################
@@ -107,8 +108,9 @@ def main(file_number):
                     next_arrival_time = arrival_time_array[no_job_arrival]
 
             else:  # Random Mode
-                next_arrival_time = master_clock + generate_inter_arrival_time(a2l, a2u, lamb)
-                inter_arrival_value_list_store.append(next_arrival_time)  # Record - List of inter arrival job
+                interval_arrival_time = generate_inter_arrival_time(a2l, a2u, lamb)
+                inter_arrival_value_list_store.append(interval_arrival_time)  # Record - List of inter arrival job
+                next_arrival_time = master_clock + interval_arrival_time
                 no_job_arrival = no_job_arrival + 1  # Record - Number of income Job
 
                 # Generate k sub-job
@@ -243,6 +245,7 @@ def main(file_number):
     # loop the Dic and get the total response time
     for i in myDic:
         output_response_time = output_response_time + float(myDic[i][1]) - float(myDic[i][0])
+        job_service_time_Store.append(float(myDic[i][1]) - float(myDic[i][0]))
 
     ########################################
     #     Write Output to file             #
@@ -257,13 +260,36 @@ def main(file_number):
     with open(mrt_file, "w") as file:
         file.write(str(round(output_response_time / no_job_arrival, 4)))
 
+    ########################################
+    #     Write logs                       #
+    ########################################
+    # Log file path
+    inter_arr_log_file = os.path.join(logMaterialFolder, "inter_arrival_" + file_number + ".txt")
+    Sub_job_number_log_file = os.path.join(logMaterialFolder, "sub_job_service_time_" + file_number + ".txt")
+    job_Service_time_log_file = os.path.join(logMaterialFolder, "job_service_time_" + file_number + ".txt")
+    if processing_mode == "random":
+        # Log inter-arrival Time
+        with open(inter_arr_log_file, "w") as file:
+            value = str(lamb) + "\n" + str(inter_arrival_value_list_store).replace("[", "").replace("]", "")
+            file.write(value)
+
+        # log Number of Sub job
+        with open(Sub_job_number_log_file, "w") as file:
+            value = str(p_sequence) + "\n" + str(sub_job_Service_time_List_Store)
+            file.write(value)
+
+        # log Number of Sub job
+        with open(job_Service_time_log_file, "w") as file:
+            value = str(job_service_time_Store)
+            file.write(value)
+
     print("Simulation ", file_number, " Done")
 
 
 #  Calculate the Inter-arrival Time
 def generate_inter_arrival_time(a2l, a2u, lamb):
-    a1k = random.uniform(a2l, a2u)
-    a2k = random.expovariate(float(lamb))
+    a1k = random.expovariate(float(lamb))
+    a2k = random.uniform(a2l, a2u)
     return a1k * a2k
 
 
@@ -374,4 +400,6 @@ def read_service_file(mode, filepath):
 
 
 if __name__ == "__main__":
-    main(str(sys.argv[1]))
+    main("7")
+    # main(str(sys.argv[1]))
+
