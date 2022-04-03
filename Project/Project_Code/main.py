@@ -375,4 +375,3 @@ def read_service_file(mode, filepath):
 
 if __name__ == "__main__":
     main(str(sys.argv[1]))
-    # main("5")
