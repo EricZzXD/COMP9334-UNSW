@@ -10,29 +10,14 @@ import numpy as np
 import os
 import math
 import random
-import tabulate
+
+import matplotlib.pyplot as plt
+from scipy import stats
 
 
-def main(file_number):
-    # Read/Output file from Folder (name)
-    readFolder = "config"
-    outputFolder = "output"
-    logMaterialFolder = "support_material"
-
-    # construct Value
+def main(threshold):
     idle_server_Value = "Idle, ∞"
-
-    # Path of necessary filename
-    Mode_file = os.path.join(readFolder, 'mode_' + file_number + '.txt')
-    Para_file = os.path.join(readFolder, 'para_' + file_number + '.txt')
-    inter_arrival_file = os.path.join(readFolder, 'interarrival_' + file_number + '.txt')
-    service_file = os.path.join(readFolder, 'service_' + file_number + '.txt')
-
-    # Initial Variable for Read file
-    processing_mode = open(Mode_file, "r").read().strip()  # Read mode and clear all newline and space
-    server_NO, threshold, end_time = 0, 0, 0
-    lamb, a2l, a2u, p_sequence, arrival_time_array = 0, 0, 0, [], []
-    job_NO, max_sub_job, sub_job_service_time_list, mu, alpha = 0, 0, [], 0, 0
+    job_NO = 0
 
     ########################################
     #          Pre_define_Valuable         #
@@ -52,21 +37,15 @@ def main(file_number):
     ########################################
     #   Read value from the Input file     #
     ########################################
-    if processing_mode == "trace":
-        server_NO, threshold = read_para_file(processing_mode, Para_file)
-        arrival_time_array = read_inter_arrival_file(processing_mode, inter_arrival_file)
-        job_NO, max_sub_job, sub_job_service_time_list = read_service_file(processing_mode, service_file)
-        server_status_list = [idle_server_Value] * server_NO
-        next_arrival_time = arrival_time_array[no_job_arrival]
-        server_available_NO = server_NO
-    else:  # Random Mode
-        server_NO, threshold, end_time = read_para_file(processing_mode, Para_file)
-        lamb, a2l, a2u, p_sequence = read_inter_arrival_file(processing_mode, inter_arrival_file)
-        mu, alpha = read_service_file(processing_mode, service_file)
-        next_arrival_time = generate_inter_arrival_time(a2l, a2u, lamb)
-        inter_arrival_value_list_store.append(next_arrival_time)
-        server_status_list = [idle_server_Value] * server_NO
-        server_available_NO = server_NO
+    processing_mode = "random"
+    server_NO, end_time = 10, 5000
+    lamb, a2l, a2u, p_sequence = 1.8, 0.7, 0.9, [0.40, 0.25, 0.15, 0.11, 0.09]
+    mu, alpha = 0.9, 0.9
+
+    next_arrival_time = generate_inter_arrival_time(a2l, a2u, lamb)
+    inter_arrival_value_list_store.append(next_arrival_time)
+    server_status_list = [idle_server_Value] * server_NO
+    server_available_NO = server_NO
 
     ########################################
     #          Simulation Output           #
@@ -97,42 +76,28 @@ def main(file_number):
         if next_event_type == "Arrival":
             master_clock = next_arrival_time
 
-            if processing_mode == "trace":
-                # Get Sub-job Info
-                sj_service_list = sub_job_service_time_list[no_job_arrival]
-                sj_number = len(sj_service_list)
+            interval_arrival_time = generate_inter_arrival_time(a2l, a2u, lamb)
+            inter_arrival_value_list_store.append(interval_arrival_time)  # Record - List of inter arrival job
+            next_arrival_time = master_clock + interval_arrival_time
+            no_job_arrival = no_job_arrival + 1  # Record - Number of income Job
 
-                # Server Allocation Complete and Update Task_arrival_counter
-                no_job_arrival = no_job_arrival + 1
-                # Handle Next Arrival Time Update
-                if no_job_arrival >= job_NO:
-                    next_arrival_time = math.inf
+            # Generate k sub-job
+            sj_number = generate_NO_sub_job(p_sequence)
+
+            # Generate Service Time
+            temp_random_list = []
+            sj_service_list = []
+            for i in range(0, sj_number):
+                random_value = random.uniform(0, 1)
+                value = round(((-math.log(1 - random_value)) ** (1 / alpha)) / mu, 4)
+                if (master_clock + value) < end_time:
+                    sj_service_list.append(value)
+                    temp_random_list.append(random_value)
                 else:
-                    next_arrival_time = arrival_time_array[no_job_arrival]
+                    arrival_true = False
 
-            else:  # Random Mode
-                interval_arrival_time = generate_inter_arrival_time(a2l, a2u, lamb)
-                inter_arrival_value_list_store.append(interval_arrival_time)  # Record - List of inter arrival job
-                next_arrival_time = master_clock + interval_arrival_time
-                no_job_arrival = no_job_arrival + 1  # Record - Number of income Job
-
-                # Generate k sub-job
-                sj_number = generate_NO_sub_job(p_sequence)
-
-                # Generate Service Time
-                temp_random_list = []
-                sj_service_list = []
-                for i in range(0, sj_number):
-                    random_value = random.uniform(0, 1)
-                    value = round(((-math.log(1 - random_value)) ** (1 / alpha)) / mu, 4)
-                    if (master_clock + value) < end_time:
-                        sj_service_list.append(value)
-                        temp_random_list.append(random_value)
-                    else:
-                        arrival_true = False
-
-                sub_job_random_uniform_Store.append(temp_random_list)
-                sub_job_Service_time_List_Store.append(sj_service_list)  # Record - Store inter-arrival Time
+            sub_job_random_uniform_Store.append(temp_random_list)
+            sub_job_Service_time_List_Store.append(sj_service_list)  # Record - Store inter-arrival Time
 
             if arrival_true:
                 # Loop According number of Sub-Job
@@ -256,45 +221,19 @@ def main(file_number):
         output_response_time = output_response_time + float(myDic[i][1]) - float(myDic[i][0])
         job_Response_Time_Store.append(float(myDic[i][1]) - float(myDic[i][0]))
 
-    ########################################
-    #     Write Output to file             #
-    ########################################
-    dep_file = os.path.join(outputFolder, 'dep_' + file_number + '.txt')
-    mrt_file = os.path.join(outputFolder, 'mrt_' + file_number + '.txt')
+    #
+    mean_response_time_list = []
+    Response_Time_Cumulate = 0
+    counter = 1
+    for i in range(2000, len(job_Response_Time_Store)):
+        Response_Time_Cumulate = Response_Time_Cumulate + job_Response_Time_Store[i]
+        mean_response_time_list.append(Response_Time_Cumulate/counter)
+        counter = counter + 1
 
-    # Write Txt to file
-    with open(dep_file, "w") as file:
-        file.write(output_sub_job_departure)
+    steady_state_mrt = Response_Time_Cumulate/counter
 
-    with open(mrt_file, "w") as file:
-        file.write(str(round(output_response_time / no_job_arrival, 4)))
 
-    ########################################
-    #     Write logs                       #
-    ########################################
-    # Log file path
-    inter_arr_log_file = os.path.join(logMaterialFolder, "inter_arrival_" + file_number + ".txt")
-    Sub_job_number_log_file = os.path.join(logMaterialFolder, "sub_job_service_time_" + file_number + ".txt")
-    job_Service_time_log_file = os.path.join(logMaterialFolder, "job_Response_time_" + file_number + ".txt")
-    if processing_mode == "random":
-        # Log inter-arrival Time
-        with open(inter_arr_log_file, "w") as file:
-            value = str(lamb) + "\n" + str(inter_arrival_value_list_store).replace("[", "").replace("]", "")
-            file.write(value)
-
-        # log Number of Sub job
-        with open(Sub_job_number_log_file, "w") as file:
-            value = str(p_sequence) + "\n" + str(sub_job_Service_time_List_Store) + "\n" + str(
-                sub_job_random_uniform_Store)
-            file.write(value)
-
-        # log Number of Sub job
-        with open(job_Service_time_log_file, "w") as file:
-            value = str(job_Response_Time_Store)
-            file.write(value)
-
-    print("Simulation ", file_number, " Done")
-    return output_sub_job_departure, round(output_response_time / no_job_arrival, 4)
+    return output_sub_job_departure, round(output_response_time / no_job_arrival, 4), steady_state_mrt
 
 
 #  Calculate the Inter-arrival Time
@@ -411,21 +350,38 @@ def read_service_file(mode, filepath):
 
 
 if __name__ == "__main__":
-    main(str(sys.argv[1]))
+    threshold = 5
+    x = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]
+    y_plot = []
+    mean_MRT = []
+    for t in range(0, 6):
+        mrt_list = []
+        for i in range(0, 50):
+            print(i)
+            a, b, steady_state_mrt = main(t)
+            mrt_list.append(steady_state_mrt)
 
-    # main("100")
+        alp = 0.05
+        mean_mrt = np.mean(mrt_list)
+        std_mrt = np.std(mrt_list, ddof=1)
+        n = len(mrt_list)
+        mf = stats.t.ppf(1 - alp / 2, n - 1) / np.sqrt(n)
+        confidence_interval = mean_mrt + np.array([-1, 1]) * mf * std_mrt
 
-    # #### Reproducibility Test
-    # logMaterialFolder = "support_material"
-    # Reproducibility_log_file = os.path.join(logMaterialFolder, "Reproducibility_random_100.txt")
-    # mrt_list = []
-    # for i in range(0, 50):
-    #     print(i+1)
-    #     mrt = main("100")
-    #
-    #     mrt_list.append(mrt)
-    #
-    # with open(Reproducibility_log_file, "w") as file:
-    #     value = mrt_list
-    #     file.write(str(value))
+        thr_interval = [confidence_interval[0], confidence_interval[1]]
+        y_plot.append(thr_interval)
+        mean_MRT.append(mean_mrt)
+        print(mean_mrt)
+        print('confidence interval: ', confidence_interval)
+
+    plt.plot(mean_MRT, "o")
+    for i in range(0, len(x)):
+        plt.plot(x[i], y_plot[i])
+
+    plt.title("Confidence Interval & Mean Response time of Threshold")
+    plt.ylabel("Mean Response Time")
+    plt.xlabel("Threshold")
+    plt.show()
+
+
 
