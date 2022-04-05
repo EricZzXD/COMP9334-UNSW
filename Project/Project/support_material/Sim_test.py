@@ -350,15 +350,14 @@ def read_service_file(mode, filepath):
 
 
 if __name__ == "__main__":
-    threshold = 5
     x = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]
     y_plot = []
     mean_MRT = []
-    for t in range(0, 6):
+    for threshold in range(0, 6):
         mrt_list = []
         for i in range(0, 50):
             print(i)
-            a, b, steady_state_mrt = main(t)
+            a, b, steady_state_mrt = main(threshold)
             mrt_list.append(steady_state_mrt)
 
         alp = 0.05
