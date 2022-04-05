@@ -172,10 +172,13 @@ def Generate_Job_Response_Time_Plot(File_Number):
 
 
 if __name__ == "__main__":
-    # Generate Graph for Internal Arrival Time
-    for i in range(5, 8, 1):
-        Generate_inter_arrival_time_plot(i)
-        Generate_subJob_plot(i)
-        Generate_subJob_Service_time(7)
-
+    Generate_inter_arrival_time_plot(5)
+    Generate_inter_arrival_time_plot(6)
+    Generate_inter_arrival_time_plot(7)
+    Generate_subJob_plot(5)
+    Generate_subJob_plot(6)
+    Generate_subJob_plot(7)
+    Generate_subJob_Service_time(5)
+    Generate_subJob_Service_time(6)
+    Generate_subJob_Service_time(7)
     generate_Reproducibility_plot()
